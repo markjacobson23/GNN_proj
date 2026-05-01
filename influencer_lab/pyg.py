@@ -11,7 +11,7 @@ from influencer_lab.synthetic import InfluencerBenchmark
 
 
 def to_pyg_data(benchmark: InfluencerBenchmark, seed: int | None = None) -> Data:
-    # Convert the graph into the canonical PyG feature matrix and edge index form.
+    # Convert the graph into PyG feature matrix and edge index form.
     x, node_ids = build_node_features(benchmark.graph)
     node_index = {node_id: idx for idx, node_id in enumerate(node_ids)}
 
@@ -38,7 +38,7 @@ def to_pyg_data(benchmark: InfluencerBenchmark, seed: int | None = None) -> Data
             labels.append(label)
 
     split_seed = benchmark.metadata.seed if seed is None else seed
-    # Build train/val/test masks on the user subset so evaluation stays on task.
+    # Build train/val/test masks on the user subset.
     train_mask, val_mask, test_mask = _build_split_masks(
         user_indices,
         labels,
@@ -85,7 +85,7 @@ def _build_split_masks(
 
 
 def _split_counts(count: int) -> tuple[int, int, int]:
-    # Keep the split rule simple and deterministic, with small-count fallbacks.
+    # simple split rule.
     if count <= 2:
         if count == 1:
             return 1, 0, 0
@@ -104,7 +104,7 @@ def _split_counts(count: int) -> tuple[int, int, int]:
 
 
 def _mask_from_indices(indices: list[int], size: int) -> torch.Tensor:
-    # The output masks always match the full node count, even though only users are active.
+    # The output masks match the full node count, but only users are active.
     mask = torch.zeros(size, dtype=torch.bool)
     for index in indices:
         mask[index] = True

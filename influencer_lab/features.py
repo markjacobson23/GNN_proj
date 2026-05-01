@@ -5,11 +5,11 @@ import torch
 from influencer_lab.graph import EdgeType, Graph, Node, NodeType
 
 FEATURE_NAMES = (
-    # One-hot node type indicators come first so the tensor is easy to inspect.
+    # One-hot node type.
     "is_user",
     "is_topic",
     "is_community",
-    # The rest are simple structural counts derived from the graph.
+    # simple structural counts derived from the graph.
     "in_degree",
     "out_degree",
     "follower_count",
@@ -20,7 +20,7 @@ FEATURE_NAMES = (
 
 
 def build_node_features(graph: Graph) -> tuple[torch.Tensor, list[int]]:
-    # Return both the tensor and the node id order so rows can be traced back later.
+    # Return both the tensor and the node id order.
     node_ids = sorted(graph.nodes)
     rows: list[list[float]] = []
 
@@ -58,6 +58,7 @@ def _feature_row(graph: Graph, node: Node) -> list[float]:
 
 def _follower_count(graph: Graph, node: Node) -> int:
     # Followers are incoming follows from other user nodes.
+    # ex: user1 follows user2 if user1 -> user2 exists in graph.
     if node.node_type != NodeType.USER:
         return 0
     return sum(
@@ -68,7 +69,7 @@ def _follower_count(graph: Graph, node: Node) -> int:
 
 
 def _interaction_count(graph: Graph, node: Node) -> int:
-    # Interaction count combines both directions because the graph stores them as directed edges.
+    # Interaction count combines both directions because the raw graph stores them as directed edges.
     if node.node_type != NodeType.USER:
         return 0
     incoming = sum(
@@ -81,7 +82,7 @@ def _interaction_count(graph: Graph, node: Node) -> int:
 
 
 def _topic_count(graph: Graph, node: Node) -> int:
-    # Topic count is just the number of user-to-topic edges leaving this user.
+    # Topic count = the number of user -> topic edges from this user.
     if node.node_type != NodeType.USER:
         return 0
     return sum(

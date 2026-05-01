@@ -10,15 +10,15 @@ from influencer_lab.metrics import binary_classification_metrics
 
 
 class GraphSAGE(nn.Module):
-    def __init__(self, in_channels: int, hidden_channels: int = 32, dropout: float = 0.2):
+    def __init__(self, in_channels: int, hidden: int = 32, dropout: float = 0.2):
         super().__init__()
-        # A small two-layer GraphSAGE is enough for the demo graph.
-        self.conv1 = SAGEConv(in_channels, hidden_channels)
-        self.conv2 = SAGEConv(hidden_channels, 1)
+        # A small two-layer GraphSAGE.
+        self.conv1 = SAGEConv(in_channels, hidden)
+        self.conv2 = SAGEConv(hidden, 1)
         self.dropout = dropout
 
     def forward(self, x: torch.Tensor, edge_index: torch.Tensor) -> torch.Tensor:
-        # Mix neighbor information, then project down to one logit per node.
+        # Mix neighbor information, then project to one logit per node.
         x = self.conv1(x, edge_index)
         x = torch.relu(x)
         x = nn.functional.dropout(x, p=self.dropout, training=self.training)
@@ -27,11 +27,11 @@ class GraphSAGE(nn.Module):
 
 
 class GCN(nn.Module):
-    def __init__(self, in_channels: int, hidden_channels: int = 32, dropout: float = 0.2):
+    def __init__(self, in_channels: int, hidden: int = 32, dropout: float = 0.2):
         super().__init__()
         # This mirrors GraphSAGE so the comparison stays fair.
-        self.conv1 = GCNConv(in_channels, hidden_channels)
-        self.conv2 = GCNConv(hidden_channels, 1)
+        self.conv1 = GCNConv(in_channels, hidden)
+        self.conv2 = GCNConv(hidden, 1)
         self.dropout = dropout
 
     def forward(self, x: torch.Tensor, edge_index: torch.Tensor) -> torch.Tensor:
@@ -52,7 +52,7 @@ def train_graphsage(
     weight_decay: float = 5e-4,
     seed: int = 7,
 ) -> GraphSAGE:
-    # Seed the run so the demo is reproducible.
+    # run seed.
     torch.manual_seed(seed)
     random.seed(seed)
 
@@ -85,7 +85,7 @@ def train_gcn(
     weight_decay: float = 5e-4,
     seed: int = 7,
 ) -> GCN:
-    # The GCN loop is intentionally spelled out instead of hidden behind a shared helper.
+    # GCN loop.
     torch.manual_seed(seed)
     random.seed(seed)
 

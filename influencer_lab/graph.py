@@ -35,18 +35,18 @@ class Edge:
 
 
 class Graph:
-    """A tiny directed multi-edge graph for one synthetic social network."""
+    """A tiny directed multi edge graph for one synthetic social network."""
 
     def __init__(self) -> None:
         # Store the full node and edge sets by id for quick lookup.
         self.nodes: dict[int, Node] = {}
         self.edges: dict[int, Edge] = {}
-        # Keep adjacency lists so feature code and PyG conversion can walk the graph fast.
+        # Keep adjacency lists so feature generation and PyG conversion can access the graph fast.
         self._outgoing: dict[int, list[Edge]] = {}
         self._incoming: dict[int, list[Edge]] = {}
 
     def add_node(self, node: Node) -> None:
-        # Node ids are unique and must not be reused.
+        # Node ids are unique and MUST NOT BE REUSED.
         if node.id in self.nodes:
             raise ValueError(f"Node-{node.id} already exists.")
         self.nodes[node.id] = node
@@ -54,7 +54,7 @@ class Graph:
         self._incoming[node.id] = []
 
     def add_edge(self, edge: Edge) -> None:
-        # Edges are also unique by id and must connect nodes already in the graph.
+        # Edges are also unique by id and must connect nodes ALREADY in the graph.
         if edge.id in self.edges:
             raise ValueError(f"Edge-{edge.id} already exists.")
         if edge.source.id not in self.nodes:
@@ -69,11 +69,11 @@ class Graph:
         self._incoming[edge.target.id].append(edge)
 
     def get_outgoing_edges(self, node_id: int) -> list[Edge]:
-        # Return a copy so callers do not mutate the graph internals by accident.
+        # Return a copy to not expose the graph internals by accident.
         return list(self._outgoing[node_id])
 
     def get_incoming_edges(self, node_id: int) -> list[Edge]:
-        # Incoming edges are used for follower counts and label-style features.
+        # used for follower counts and label features.
         return list(self._incoming[node_id])
 
     def out_degree(self, node_id: int) -> int:

@@ -18,7 +18,7 @@ from influencer_lab.features import FEATURE_NAMES, build_node_features
 
 
 def _graph_signature(benchmark) -> tuple[tuple, tuple]:
-    # Reduce the graph to a deterministic tuple so repeated runs can be compared directly.
+    # Reduce the graph to a deterministic tuple.
     nodes = tuple(
         sorted(
             (
@@ -84,7 +84,7 @@ def test_pyg_data_contract_and_masks_are_stable() -> None:
 
 
 def test_feature_table_keeps_influencer_signal_simple() -> None:
-    # Influencers are wired to have stronger follower signals than normal users.
+    # Influencers are wired to have stronger more followers than normal users.
     benchmark = build_demo_benchmark(seed=7)
     features, node_ids = build_node_features(benchmark.graph)
     follower_idx = FEATURE_NAMES.index("follower_count")
@@ -104,7 +104,7 @@ def test_feature_table_keeps_influencer_signal_simple() -> None:
 
 
 def test_graphsage_and_degree_baseline_smoke_test() -> None:
-    # Make sure both the learned model and the simple baseline run end to end.
+    # Make sure both the learned model and the simple baseline run completely.
     benchmark = build_demo_benchmark(seed=7)
     data = to_pyg_data(benchmark)
     model = GraphSAGE(in_channels=data.x.size(1), hidden_channels=16, dropout=0.1)

@@ -8,7 +8,7 @@ def binary_classification_metrics(y_true: torch.Tensor, y_score: torch.Tensor) -
     y_true = y_true.float()
     y_pred = (y_score >= 0.5).float()
 
-    # Count the confusion-matrix entries directly.
+    # Count the confusion-matrix entries.
     tp = float(((y_pred == 1) & (y_true == 1)).sum().item())
     tn = float(((y_pred == 0) & (y_true == 0)).sum().item())
     fp = float(((y_pred == 1) & (y_true == 0)).sum().item())

@@ -8,7 +8,7 @@ from influencer_lab.graph import Edge, EdgeType, Graph, Node, NodeType
 
 @dataclass(frozen=True, slots=True)
 class InfluencerGraphConfig:
-    # These defaults keep the demo graph small enough to explain.
+    # default setup values.
     user_count: int = 42
     topic_count: int = 5
     community_count: int = 4
@@ -40,16 +40,16 @@ class InfluencerGraphGenerator:
     """Build one deterministic synthetic social graph."""
 
     def __init__(self, config: InfluencerGraphConfig | None = None):
-        # Allow overriding the demo size.
+        # demo override.
         self.config = config or InfluencerGraphConfig()
 
     @classmethod
     def demo_preset(cls) -> "InfluencerGraphGenerator":
-        # The demo preset is the default small benchmark used by the CLI and tests.
+        # The demo preset is the default used by the CLI and tests.
         return cls(InfluencerGraphConfig())
 
     def generate(self, seed: int = 7) -> InfluencerBenchmark:
-        # Use a local Random so the rest of the process does not affect reproducibility.
+        # Use a local Random.
         rng = random.Random(seed)
         graph = Graph()
         builder = _Builder(graph)
@@ -71,7 +71,7 @@ class InfluencerGraphGenerator:
             self.config.user_count, self.config.influencer_count
         )
 
-        # Create the user nodes and mark which ones should become influencers.
+        # Create the user nodes and mark which ones are influencers.
         for index in range(self.config.user_count):
             community_id = index % self.config.community_count
             user = builder.add_node(
@@ -86,14 +86,14 @@ class InfluencerGraphGenerator:
             if index in influencer_indices:
                 influencer_ids.add(user.id)
 
-        # Group influencers by community so the generator can create local and cross-community signal.
+        # Group influencers by community so the generator can create local and cross-community connections.
         influencer_by_community: dict[int, list[Node]] = {}
         for user in users:
             if user.id in influencer_ids:
                 community_id = int(user.attributes["community_id"])
                 influencer_by_community.setdefault(community_id, []).append(user)
 
-        # Wire each user into the graph with the relationships the model should learn from.
+        # Wire each user into the graph with the relationships the model will learn from.
         for user in users:
             community_id = int(user.attributes["community_id"])
             builder.add_edge(user, community_nodes[community_id], EdgeType.USER_COMMUNITY)
@@ -115,7 +115,7 @@ class InfluencerGraphGenerator:
             ]
 
             if user.id not in influencer_ids:
-                # Non-influencers mostly point at influencers, which gives the model a clear pattern.
+                # Non-influencers mostly point at influencers (ex: most people follow influencers).
                 for target in _sample_without_replacement(
                     rng, same_community_influencers, self.config.same_community_follows
                 ):
@@ -136,7 +136,7 @@ class InfluencerGraphGenerator:
                 for target in _sample_without_replacement(rng, bridge_targets, 2):
                     builder.add_edge(user, target, EdgeType.INTERACTION)
 
-            # Everyone gets some interaction edges so the graph does not collapse into a single signal.
+            # Everyone gets some interaction edges so the graph does not become trivial.
             interaction_pool = [
                 candidate
                 for candidate in users
@@ -165,26 +165,25 @@ class InfluencerGraphGenerator:
 
 
 def build_demo_benchmark(seed: int = 7) -> InfluencerBenchmark:
-    # Keep the public helper one line so the common path is easy to read.
     return InfluencerGraphGenerator.demo_preset().generate(seed)
 
 
 class _Builder:
     def __init__(self, graph: Graph):
-        # Maintain separate counters for node and edge ids while constructing the graph.
+        # separate counters for node and edge ids while constructing the graph.
         self.graph = graph
         self._next_node_id = 1
         self._next_edge_id = 1
 
     def add_node(self, node_type: NodeType, attributes: dict[str, int | float | str | bool]) -> Node:
-        # The builder owns node id assignment so the generator never has to manage it directly.
+        # The builder owns node id assignment so the generator never touches it.
         node = Node(self._next_node_id, node_type, dict(attributes))
         self.graph.add_node(node)
         self._next_node_id += 1
         return node
 
     def add_edge(self, source: Node, target: Node, edge_type: EdgeType, weight: float = 1.0) -> Edge:
-        # Edges are created with a stable id and then attached to the graph.
+        # Edges are created with a id and then attached to the graph.
         edge = Edge(self._next_edge_id, source, target, edge_type, weight=weight)
         self.graph.add_edge(edge)
         self._next_edge_id += 1
